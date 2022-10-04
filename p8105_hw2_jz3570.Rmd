@@ -1,0 +1,181 @@
+---
+title: "p8105_hw2_jz3570"
+author: "Jiawen Zhao"
+date: "9/29/2022"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
+```{r}
+library(tidyverse)
+
+options(tibble.print_min = 3)
+
+NYC_Data <- read.csv("~/Desktop/P8105/HW2/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+NYC_Data <- janitor::clean_names(NYC_Data)
+NYC_Data_filter = select(NYC_Data, line, station_name, station_latitude, station_longitude, contains('route'), entry, vending, entrance_type, ada)
+# line, station_name, station_latitude, station_longitude, routes served, entry, vending, entrance_type, ada
+NYC_Data_filter$entry <- as.factor(NYC_Data_filter$entry)
+NYC_Data_filter$vending <- as.factor(NYC_Data_filter$vending)
+NYC_Data_filter$station_name <- as.factor(NYC_Data_filter$station_name)
+distinct_station = distinct(NYC_Data_filter,line,station_name)
+ada = filter(NYC_Data_filter, ada == TRUE)
+ada_distinct_station = distinct(ada,line,station_name)
+entry_vending = filter(NYC_Data_filter, entry == "YES" & vending == "NO")
+entry_vending_station = distinct(entry_vending,line,station_name)
+
+#rowSums("A" == NYC_Data_filter) > 0 
+distinct_A =
+  mutate(NYC_Data_filter,
+    A = rowSums("A" == NYC_Data_filter) > 0 
+  )
+
+A_train = filter(distinct_A, A == TRUE)
+A_train_station = distinct(A_train,line,station_name)
+A_train_ada = filter(A_train, ada == TRUE)
+A_train_ada_station = distinct(A_train_ada,line,station_name)
+
+pulse_data = NYC_Data_filter
+pulse_data[5:15] = lapply(pulse_data[5:15], FUN = function(y){as.character(y)})
+pulse_tidy_data = 
+  pivot_longer(
+    pulse_data, 
+    route1:route11,
+    names_to = "route", 
+    values_to = "line code")
+#Write a short paragraph about this dataset – explain briefly what variables the dataset contains, describe your data cleaning steps so far, and give the dimension (rows x columns) of the resulting dataset. Are these data tidy?
+
+## the dataset now contains variables including line, station_name, station_latitude, station_longitude, routes served, entry, vending, entrance_type, ada.  
+
+## Answer the following questions using these data:
+
+## How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
+## How many stations are ADA compliant?
+## What proportion of station entrances / exits without vending allow entrance?
+## Reformat data so that route number and route name are distinct variables. How many distinct stations serve the A train? Of the stations that serve the A train, how many are ADA compliant?
+
+
+```
+
+## The raw dataset has 32 columns (variables) and 1868 rows (observations). After selecting only the variables we need, the dataset has 19 columns (variables) and 1868 rows (observations). While selecting the routes served, we used the parameter contain() to select all the columns contain "route". Then, we change the data type of column "entry" from character to factors. THe dataset now is tidier than the raw dataset, but we can make further improvements too.
+
+## There are 465 distinct stations
+ 
+## Among those distinct stations, there are 84 stations that are ada compliant. If not only look at the distinct stations, but also look at the duplicated stations, there are 468 stations that are ada compliant.
+
+## There are 43/186 of distinct stations having entry without vending. If not only look at the distinct stations, but also look at the duplicated stations, there are 43/186 of stations having entry without vending.
+
+## There are 4 distinct stations serve the A train. Of the stations that serve the A train, 3 stations are ADA compliant.
+
+
+
+
+## Problem 2
+
+You can also embed plots, for example:
+
+```{r}
+library(readxl)
+Trash_Wheel_m <- read_excel("Trash-Wheel-Collection-Totals-7-2020-2.xlsx", sheet = "Mr. Trash Wheel")
+Trash_Wheel_m <- janitor::clean_names(Trash_Wheel_m)
+#Trash_Wheel_m = na.omit(Trash_Wheel_m)
+head(Trash_Wheel_m, 5)
+Trash_Wheel_m = Trash_Wheel_m[1:(length(Trash_Wheel_m)-3)]
+Trash_Wheel_m = na.omit(Trash_Wheel_m, dumpster)
+Trash_Wheel_m$sports_balls = round(Trash_Wheel_m$sports_balls)
+Trash_Wheel_m$sports_balls = as.integer(Trash_Wheel_m$sports_balls)
+Trash_Wheel_m$sheet_type = "Mr. Trash Wheel"
+```
+
+
+```{r}
+library(readxl)
+Trash_Wheel_p <- read_excel("Trash-Wheel-Collection-Totals-7-2020-2.xlsx", sheet = "Professor Trash Wheel")
+Trash_Wheel_p <- janitor::clean_names(Trash_Wheel_p)
+#Trash_Wheel_p = na.omit(Trash_Wheel_p)
+head(Trash_Wheel_p, 5)
+#Trash_Wheel_p = Trash_Wheel_p[1:(length(Trash_Wheel_p)-3)]
+Trash_Wheel_p = na.omit(Trash_Wheel_p, dumpster)
+Trash_Wheel_p$sports_balls = round(Trash_Wheel_p$sports_balls)
+Trash_Wheel_p$sports_balls = as.integer(Trash_Wheel_p$sports_balls)
+Trash_Wheel_p$dumpster = as.character(Trash_Wheel_p$dumpster)
+Trash_Wheel_p$sheet_type = "Professor Trash Wheel"
+```
+
+
+```{r}
+Trash_Wheel = full_join(Trash_Wheel_m,Trash_Wheel_p)
+Trash_Wheel_ans_m = filter(Trash_Wheel, sheet_type == "Mr. Trash Wheel" & year == 2020)
+sum(Trash_Wheel_ans_m$weight_tons)
+Trash_Wheel_ans_p = filter(Trash_Wheel, sheet_type == "Professor Trash Wheel" & year == 2020)
+sum(Trash_Wheel_ans_p$weight_tons)
+
+# ??????? in 2020 or in total
+```
+
+
+# Problem 3
+
+```{r}
+# pols-month.csv, unemployment.csv, and snp.csv
+library(tidyverse)
+
+options(tibble.print_min = 3)
+
+pols.month <- read.csv("~/Desktop/P8105/HW2/fivethirtyeight_datasets/pols-month.csv")
+unemployment <- read.csv("~/Desktop/P8105/HW2/fivethirtyeight_datasets/unemployment.csv")
+snp <- read.csv("~/Desktop/P8105/HW2/fivethirtyeight_datasets/snp.csv")
+unemployment = janitor::clean_names(unemployment)
+
+```
+
+```{r}
+pols.month = 
+  read.csv("~/Desktop/P8105/HW2/fivethirtyeight_datasets/pols-month.csv") %>%
+  janitor::clean_names() %>%
+  separate(mon, into = c("year", "month", "day"), sep = '-')
+# month to month.abb
+pols.month$month <- month.abb[as.numeric(pols.month$month)]
+#new column-president
+pols.month = mutate(pols.month, president = case_when(prez_dem == 1 ~ 'dem',
+  prez_gop == 1 ~ 'gop'))%>%
+  select(-prez_dem, -prez_gop, -day)
+
+
+```
+
+```{r}
+snp <- read.csv("~/Desktop/P8105/HW2/fivethirtyeight_datasets/snp.csv") %>%
+  janitor::clean_names() %>%
+  separate(date, into = c("month", "day", "year"), sep = '/') %>% 
+  select(year, month, close) 
+  
+# month to month.abb
+snp$month <- month.abb[as.numeric(snp$month)]
+
+snp$year <- format(as.Date(as.character(snp$year), format="%y"),"%Y")
+
+```
+
+
+```{r}
+unemployment$year = as.character(unemployment$year)
+
+unemployment = 
+  pivot_longer(
+    unemployment, 
+    jan:dec,
+    names_to = "month", 
+    values_to = "unemployment")
+
+
+ans = left_join(pols.month, snp, by = c('year','month'))
+ans = left_join(ans, unemployment, by = c('year','month'))
+```
+
+
