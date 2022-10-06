@@ -80,7 +80,7 @@ pulse_tidy_data =
 
 ```{r}
 library(readxl)
-Trash_Wheel_m <- read_excel("Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel")
+Trash_Wheel_m <- read_excel("Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", skip = 1)
 Trash_Wheel_m <- janitor::clean_names(Trash_Wheel_m)
 #Trash_Wheel_m = na.omit(Trash_Wheel_m)
 head(Trash_Wheel_m, 5)
@@ -181,8 +181,9 @@ ans = left_join(pols.month, snp, by = c('year','month'))
 ans = left_join(ans, unemployment, by = c('year','month'))
 
 ## Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset
+```
 
 ## Firstly, it reads pols-month.csv as a data frame, pols.month, where it has 822 observations of 9 variables related to the number of national politicians who are democratic or republican for each day. I use `seperate` function to split the date into year, month, day. Then, combine the binary columns of rep/dem party into one column. Secondly, it reads snp data set as snp and it contains 787 observations of 2 variables related to Standard & Poor’s stock market index. Similarly, I use `seperate` function to split the date into year, month, day. Then, it reads unemployment.csv as unemployment data set. It contains 68 observations of 13 variables. Then, I use pivot_longer to combines month as a variable, instead of 12 variables. Finally, I conbines all three data frames by using left join based on the year and month. The final data frame ans has 822 observations and 11 variables, inclusing year, month, gov_gop, president, unemployment, etc. Year range from 1947 to 2015.
-```
+
 
 
